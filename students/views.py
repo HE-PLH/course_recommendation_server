@@ -30,7 +30,7 @@ class ListCreateCheckPinView(generics.ListCreateAPIView):
         #     name=request.data["name"]
         # )
         # Test the chatbot
-        res=Student.objects.filter(TAXPAYERPIN=request.data["TAXPAYERPIN"])
+        res=Student.objects.filter(index=request.data["index"])
         student = res.first()
 
         s = StudentSerializer(student)
@@ -51,15 +51,13 @@ class ListCreateStudentView(generics.ListCreateAPIView):
     @validate_student_data
     def post(self, request, *args, **kwargs):
         a_tag = Student.objects.create(
-            TAXPAYERPIN=request.data["TAXPAYERPIN"],
-            LASTNAME=request.data["LASTNAME"],
-            FIRSTNAME=request.data["FIRSTNAME"],
-            MIDDLENAME=request.data["MIDDLENAME"],
-            MPOBOX=request.data["MPOBOX"],
-            MTOWN=request.data["MTOWN"],
-            POCODE=request.data["POCODE"],
-            RTELNO=request.data["RTELNO"],
-            STARTUPDATE=request.data["STARTUPDATE"]
+            index=request.data["index"],
+            lastname=request.data["lastname"],
+            firstname=request.data["firstname"],
+            middlename=request.data["middlename"],
+            password=request.data["password"],
+            school=request.data["school"],
+            email=request.data["email"],
         )
         return Response(
             data=StudentSerializer(a_tag).data,

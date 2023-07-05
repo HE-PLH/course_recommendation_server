@@ -8,7 +8,7 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         # fields = "__all__"
-        fields = ["course_code", "name", "years", "sem_count"]
+        fields = ["id", "course_code", "name", "years", "sem_count"]
 
     # def update(self, instance, validated_data):
     #     instance.course_code = validated_data.get("course_code", instance.course_code)

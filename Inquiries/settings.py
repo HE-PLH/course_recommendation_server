@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'authentication.apps.AuthenticationConfig',
     'chatbot.apps.ChatbotConfig',
     'courses.apps.CoursesConfig',
+    'students.apps.StudentsConfig',
     'corsheaders'
 ]
 

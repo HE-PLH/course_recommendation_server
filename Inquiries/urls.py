@@ -24,6 +24,7 @@ urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     re_path('api/(?P<version>(v1|v2))/', include('authentication.urls')),
     re_path('api/(?P<version>(v1|v2))/', include('chatbot.urls')),
-    re_path('api/(?P<version>(v1|v2))/', include('courses.urls'))
+    re_path('api/(?P<version>(v1|v2))/', include('courses.urls')),
+    re_path('api/(?P<version>(v1|v2))/', include('students.urls'))
 ]
 

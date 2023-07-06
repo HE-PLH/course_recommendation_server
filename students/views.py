@@ -6,9 +6,9 @@ from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import status
 
-from .models import Student
-from .serializers import StudentSerializer
-from .decorators import validate_student_data
+from .models import Student, Subject
+from .serializers import StudentSerializer, SubjectSerializer
+from .decorators import validate_student_data, validate_subject_data
 
 # Create your views here.
 
@@ -59,12 +59,11 @@ class ListCreateStudentView(generics.ListCreateAPIView):
             school=request.data["school"],
             email=request.data["email"],
         )
+
         return Response(
             data=StudentSerializer(a_tag).data,
             status=status.HTTP_201_CREATED
         )
-
-
 
 class StudentDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -112,6 +111,81 @@ class StudentDetailView(generics.RetrieveUpdateDestroyAPIView):
             return Response(
                 data={
                     "message": "Student with id: {} does not exist".format(kwargs["pk"])
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+class ListCreateSubjectView(generics.ListCreateAPIView):
+    """
+    GET Chats/
+    POST Chats/
+    """
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @validate_subject_data
+    def post(self, request, *args, **kwargs):
+        a_tag = Subject.objects.create(
+            index=request.data["index"],
+            lastname=request.data["lastname"],
+            firstname=request.data["firstname"],
+            middlename=request.data["middlename"],
+            password=request.data["password"],
+            school=request.data["school"],
+            email=request.data["email"],
+        )
+
+        return Response(
+            data=SubjectSerializer(a_tag).data,
+            status=status.HTTP_201_CREATED
+        )
+
+class SubjectDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    GET Chats/:id/
+    PUT Chats/:id/
+    DELETE Chats/:id/
+    """
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            a_subject = self.queryset.get(pk=kwargs["pk"])
+            return Response(SubjectSerializer(a_subject).data)
+        except Subject.DoesNotExist:
+            return Response(
+                data={
+                    "message": "Subject with id: {} does not exist".format(kwargs["pk"])
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @validate_subject_data
+    def put(self, request, *args, **kwargs):
+        try:
+            a_tag = self.queryset.get(pk=kwargs["pk"])
+            serializer = SubjectSerializer()
+            updated_subject = serializer.update(a_tag, request.data)
+            return Response(SubjectSerializer(updated_subject).data)
+        except Subject.DoesNotExist:
+            return Response(
+                data={
+                    "message": "Subject with id: {} does not exist".format(kwargs["pk"])
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            a_subject = self.queryset.get(pk=kwargs["pk"])
+            a_subject.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Subject.DoesNotExist:
+            return Response(
+                data={
+                    "message": "Subject with id: {} does not exist".format(kwargs["pk"])
                 },
                 status=status.HTTP_404_NOT_FOUND
             )

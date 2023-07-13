@@ -20,10 +20,19 @@ class Subject(models.Model):
     # subject
     name = models.CharField(max_length=255, null=False)
 
+    def __str__(self):
+        return "{}".format(self.name)
+
+class StudentSubject(models.Model):
+    # subject
+    user = models.ForeignKey(Student, on_delete=models.CASCADE)
+
+    subject = models.CharField(max_length=255, null=False)
+    grade = models.CharField(max_length=255, null=False)
 
 
     def __str__(self):
-        return "{}".format(self.name)
+        return "{} - {} - {}".format(self.subject, self.grade, self.user)
 
 
 

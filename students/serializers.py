@@ -1,14 +1,14 @@
 from django.forms import model_to_dict
 from rest_framework import serializers
 
-from .models import Student, Subject
+from .models import Student, Subject, StudentSubject
 
 
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         # fields = "__all__"
-        fields = ["index", "lastname", "firstname", "middlename", "password", "school", "email"]
+        fields = ["id", "index", "lastname", "firstname", "middlename", "password", "school", "email"]
 
     def update(self, instance, validated_data):
         instance.index = validated_data.get("index", instance.index)
@@ -22,11 +22,27 @@ class StudentSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+class StudentSubjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentSubject
+        user = StudentSerializer()
+        # fields = "__all__"
+        fields = ["id", "user", "subject", "grade"]
+
+    def update(self, instance, validated_data):
+        instance.user = validated_data.get("user", instance.user)
+        instance.subject = validated_data.get("subject", instance.subject)
+        instance.grade = validated_data.get("grade", instance.grade)
+
+
+        instance.save()
+        return instance
+
 class SubjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subject
         # fields = "__all__"
-        fields = ["name"]
+        fields = ["id", "name"]
 
     def update(self, instance, validated_data):
         instance.name = validated_data.get("name", instance.name)

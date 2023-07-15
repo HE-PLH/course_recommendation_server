@@ -1,5 +1,9 @@
 from django.db import models
 
+import sys
+sys.path.append("..")
+
+from courses.models import Course
 class Chats(models.Model):
     # chat
     name = models.CharField(max_length=255, null=False)

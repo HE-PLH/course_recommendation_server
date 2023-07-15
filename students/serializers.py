@@ -1,7 +1,7 @@
 from django.forms import model_to_dict
 from rest_framework import serializers
 
-from .models import Student, Subject, StudentSubject
+from .models import Student, Subject, StudentSubject, StudentWeight
 
 
 class StudentSerializer(serializers.ModelSerializer):
@@ -34,6 +34,20 @@ class StudentSubjectSerializer(serializers.ModelSerializer):
         instance.subject = validated_data.get("subject", instance.subject)
         instance.grade = validated_data.get("grade", instance.grade)
 
+
+        instance.save()
+        return instance
+
+class StudentWeightSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentWeight
+        user = StudentSerializer()
+        # fields = "__all__"
+        fields = ["id", "user", "response"]
+
+    def update(self, instance, validated_data):
+        instance.user = validated_data.get("user", instance.user)
+        instance.subject = validated_data.get("response", instance.response)
 
         instance.save()
         return instance

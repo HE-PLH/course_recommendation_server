@@ -6,12 +6,15 @@ from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import status
 
-from .models import Student, Subject, StudentSubject
-from .serializers import StudentSerializer, SubjectSerializer, StudentSubjectSerializer
+from .models import Student, Subject, StudentSubject, StudentWeight
+from .serializers import StudentSerializer, SubjectSerializer, StudentSubjectSerializer, StudentWeightSerializer
 from .decorators import validate_student_data, validate_subject_data, validate_student_subject_data
 
 # Create your views here.
+import sys
+sys.path.append("..")
 
+from chatbot.models import Responses
 
 class ListCreateCheckPinView(generics.ListCreateAPIView):
     """
@@ -267,6 +270,86 @@ class StudentSubjectDetailView(generics.RetrieveUpdateDestroyAPIView):
             return Response(
                 data={
                     "message": "StudentSubject with id: {} does not exist".format(kwargs["pk"])
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+class ListCreateStudentWeightView(generics.ListCreateAPIView):
+    """
+    GET Chats/
+    POST Chats/
+    """
+    queryset = StudentWeight.objects.all()
+    serializer_class = StudentWeightSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @validate_student_subject_data
+    def post(self, request, *args, **kwargs):
+        students_data = request.data
+        temp = []
+        for student_data in students_data:
+            temp.append(
+                StudentWeightSerializer(StudentWeight.objects.create(
+                    user=Student.objects.get(id=student_data["user"]),
+                    response=Responses.objects.get(id=student_data["response"])
+                )).data)
+        # a_tag = StudentWeight.objects.create(
+        #     user=request.data["user"],
+        #     subject=request.data["subject"],
+        #     grade=request.data["grade"],
+        # )
+
+        return Response(
+            data=temp,
+            status=status.HTTP_201_CREATED
+        )
+
+class StudentWeightDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    GET Chats/:id/
+    PUT Chats/:id/
+    DELETE Chats/:id/
+    """
+    queryset = StudentWeight.objects.all()
+    serializer_class = StudentWeightSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            a_student_subject = self.queryset.get(pk=kwargs["pk"])
+            return Response(StudentWeightSerializer(a_student_subject).data)
+        except StudentWeight.DoesNotExist:
+            return Response(
+                data={
+                    "message": "StudentWeight with id: {} does not exist".format(kwargs["pk"])
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @validate_student_subject_data
+    def put(self, request, *args, **kwargs):
+        try:
+            a_tag = self.queryset.get(pk=kwargs["pk"])
+            serializer = StudentWeightSerializer()
+            updated_student_subject = serializer.update(a_tag, request.data)
+            return Response(StudentWeightSerializer(updated_student_subject).data)
+        except StudentWeight.DoesNotExist:
+            return Response(
+                data={
+                    "message": "StudentWeight with id: {} does not exist".format(kwargs["pk"])
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            a_student_subject = self.queryset.get(pk=kwargs["pk"])
+            a_student_subject.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except StudentWeight.DoesNotExist:
+            return Response(
+                data={
+                    "message": "StudentWeight with id: {} does not exist".format(kwargs["pk"])
                 },
                 status=status.HTTP_404_NOT_FOUND
             )

@@ -38,7 +38,7 @@ class StudentSubject(models.Model):
     def __str__(self):
         return "{} - {} - {}".format(self.subject, self.grade, self.user)
 
-class StudentWeights(models.Model):
+class StudentWeight(models.Model):
     # subject
     user = models.ForeignKey(Student, on_delete=models.CASCADE)
     response = models.ForeignKey(Responses, on_delete=models.CASCADE)

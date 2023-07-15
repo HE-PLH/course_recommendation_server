@@ -7,10 +7,16 @@ from rest_framework.response import Response
 from rest_framework.views import status
 
 from .chat_nlp import chatbot
-from .decorators import validate_request_data, validate_intent_data
-from .models import Chats, TrainingData, Tags, Patterns, Responses
+from .decorators import validate_request_data, validate_intent_data, validate_weight_data
+from .models import Chats, TrainingData, Tags, Patterns, Responses, Weight
 from .serializers import ChatsSerializer, TrainingDataSerializer, TagsSerializer, PatternsSerializer, \
-    ResponsesSerializer
+    ResponsesSerializer, WeightSerializer
+
+import sys
+sys.path.append("..")
+
+from courses.models import Course
+from courses.serializers import CourseSerializer
 
 
 class ListCreateAskView(generics.ListCreateAPIView):
@@ -512,6 +518,154 @@ class ChatsDetailView(generics.RetrieveUpdateDestroyAPIView):
             return Response(
                 data={
                     "message": "Song with id: {} does not exist".format(kwargs["pk"])
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class ListCreateWeightView(generics.ListCreateAPIView):
+    """
+    GET Chats/
+    POST Chats/
+    """
+
+    queryset = Weight.objects.all()
+    serializer_class = WeightSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @validate_request_data
+    def post(self, request, *args, **kwargs):
+        course_instance = Course.objects.get(id=request.data["course"])
+        response_instance = Responses.objects.get(id=request.data["response"])
+        a_Weight = Weight.objects.create(
+            name=request.data["value"],
+            course=course_instance,
+            response=response_instance
+        )
+        return Response(
+            data=WeightSerializer(a_Weight).data,
+            status=status.HTTP_201_CREATED
+        )
+
+
+class WeightDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    GET Chats/:id/
+    PUT Chats/:id/
+    DELETE Chats/:id/
+    """
+    queryset = Weight.objects.all()
+    serializer_class = WeightSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            a_Weight = self.queryset.get(pk=kwargs["pk"])
+            return Response(WeightSerializer(a_Weight).data)
+        except Tags.DoesNotExist:
+            return Response(
+                data={
+                    "message": "Weight with id: {} does not exist".format(kwargs["pk"])
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @validate_weight_data
+    def put(self, request, *args, **kwargs):
+        try:
+            a_Weight = self.queryset.get(pk=kwargs["pk"])
+            serializer = TagsSerializer()
+            updated_Weight = serializer.update(a_Weight, request.data)
+            return Response(WeightSerializer(updated_Weight).data)
+        except Weight.DoesNotExist:
+            return Response(
+                data={
+                    "message": "Weight with id: {} does not exist".format(kwargs["pk"])
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            a_Weight = self.queryset.get(pk=kwargs["pk"])
+            a_Weight.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Weight.DoesNotExist:
+            return Response(
+                data={
+                    "message": "Weight with id: {} does not exist".format(kwargs["pk"])
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class WeightReponseDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    GET Chats/:id/
+    PUT Chats/:id/
+    DELETE Chats/:id/
+    """
+    queryset = Weight.objects.all()
+    serializer_class = WeightSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            response_instance = Responses.objects.get(id=kwargs["pk"])
+            a_Weight = Weight.objects.all()
+            temp = []
+            r = ResponsesSerializer(response_instance).data
+
+            for i in a_Weight:
+                dt = WeightSerializer(i).data
+                mv = CourseSerializer(Course.objects.get(id=dt["course"])).data
+                if (dt["value"]):
+                    temp.append({
+                        # "response": r,
+                        "course": mv,
+                        # "tag": TagsSerializer(Tags.objects.get(id=r["tag"])).data,
+                        "id": dt["id"],
+                        "value": dt["value"]
+                    })
+
+                print(temp)
+
+            return Response(
+                data=temp,
+                status=status.HTTP_200_OK
+            )
+        except Tags.DoesNotExist:
+            return Response(
+                data={
+                    "message": "Weight with id: {} does not exist".format(kwargs["pk"])
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @validate_weight_data
+    def put(self, request, *args, **kwargs):
+        try:
+            a_Weight = self.queryset.get(pk=kwargs["pk"])
+            serializer = TagsSerializer()
+            updated_Weight = serializer.update(a_Weight, request.data)
+            return Response(WeightSerializer(updated_Weight).data)
+        except Weight.DoesNotExist:
+            return Response(
+                data={
+                    "message": "Weight with id: {} does not exist".format(kwargs["pk"])
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            a_Weight = self.queryset.get(pk=kwargs["pk"])
+            a_Weight.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Weight.DoesNotExist:
+            return Response(
+                data={
+                    "message": "Weight with id: {} does not exist".format(kwargs["pk"])
                 },
                 status=status.HTTP_404_NOT_FOUND
             )

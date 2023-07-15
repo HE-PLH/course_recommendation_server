@@ -1,5 +1,9 @@
 from django.db import models
 
+import sys
+sys.path.append("..")
+
+from courses.models import Course
 
 class Chats(models.Model):
     # chat
@@ -34,7 +38,7 @@ class Patterns(models.Model):
     tag = models.ForeignKey(Tags, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.name
+        return "{} ({})".format(self.name, self.tag)
 
     def tag_name(self):
         return self.tag.name
@@ -49,7 +53,7 @@ class Responses(models.Model):
     tag = models.ForeignKey(Tags, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.name
+        return "{} ({})".format(self.name, self.tag)
 
     def tag_name(self):
         return self.tag.name
@@ -60,12 +64,12 @@ class Responses(models.Model):
 
 class Weight(models.Model):
     # Tag
-    course = models.CharField(max_length=255)
     value = models.FloatField(max_length=255)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
     response = models.ForeignKey(Responses, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.name
+        return "{} . {} . {}".format(self.course, self.value, self.response)
 
     def response_name(self):
         return self.response.name

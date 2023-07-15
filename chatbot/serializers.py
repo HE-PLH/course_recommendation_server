@@ -3,6 +3,11 @@ from rest_framework import serializers
 
 from .models import Chats, TrainingData, Tags, Patterns, Responses, Weight
 
+import sys
+sys.path.append("..")
+
+from courses.serializers import CourseSerializer
+
 
 class ChatsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -47,19 +52,6 @@ class PatternsSerializer(serializers.ModelSerializer):
         return instance
 
 
-
-class WeightSerializer(serializers.ModelSerializer):
-    response = serializers.ReadOnlyField()
-
-    class Meta:
-        model = Weight
-        fields = ["id", "value", "course", "response"]
-
-    def update(self, instance, validated_data):
-        instance.name = validated_data.get("name", instance.name)
-        instance.tag = validated_data.get("response", instance.response)
-        instance.save()
-        return instance
 
 
 
@@ -158,3 +150,21 @@ class TrainingDataSerializer(serializers.Serializer):
                     response_instance = Responses.objects.create(**data)
 
         return instance
+
+
+
+class WeightSerializer(serializers.ModelSerializer):
+    # response = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Weight
+        response = ResponsesSerializer()
+        course = CourseSerializer()
+        fields = ["id", "value", "course", "response"]
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get("name", instance.name)
+        instance.tag = validated_data.get("response", instance.response)
+        instance.save()
+        return instance
+

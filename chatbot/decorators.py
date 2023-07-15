@@ -35,3 +35,21 @@ def validate_intent_data(fn):
         return fn(*args, **kwargs)
 
     return decorated
+
+
+def validate_weight_data(fn):
+    def decorated(*args, **kwargs):
+        # args[0] == GenericView Object
+        value = args[0].request.data.get("value", "")
+        # artist = args[0].request.data.get("artist", "")
+        if not value:
+            return Response(
+                data={
+                    "message": "Value required for tag"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return fn(*args, **kwargs)
+
+    return decorated
+

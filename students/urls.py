@@ -1,5 +1,7 @@
 from django.urls import path
-from .views import ListCreateStudentView, StudentDetailView,ListCreateCheckPinView, SubjectDetailView, ListCreateSubjectView, ListCreateStudentSubjectView, StudentSubjectDetailView
+from .views import ListCreateStudentView, StudentDetailView, ListCreateCheckPinView, SubjectDetailView, \
+    ListCreateSubjectView, ListCreateStudentSubjectView, StudentSubjectDetailView, ListCreateStudentWeightView, \
+    StudentWeightDetailView
 
 urlpatterns = [
     path('student/', ListCreateStudentView.as_view(), name="Student-list-create"),
@@ -11,4 +13,7 @@ urlpatterns = [
 
     path('student-subject/', ListCreateStudentSubjectView.as_view(), name="student-Subject-list-create"),
     path('student-subject/<int:pk>/', StudentSubjectDetailView.as_view(), name="student-subject-detail"),
+
+    path('student-weight/', ListCreateStudentWeightView.as_view(), name="student-weight-list-create"),
+    path('student-weight/<int:pk>/', StudentWeightDetailView.as_view(), name="student-weight-detail"),
 ]

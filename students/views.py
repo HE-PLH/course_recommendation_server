@@ -8,7 +8,8 @@ from rest_framework.views import status
 
 from .models import Student, Subject, StudentSubject, StudentWeight
 from .serializers import StudentSerializer, SubjectSerializer, StudentSubjectSerializer, StudentWeightSerializer
-from .decorators import validate_student_data, validate_subject_data, validate_student_subject_data
+from .decorators import validate_student_data, validate_subject_data, validate_student_subject_data, \
+    validate_student_weight_data
 
 # Create your views here.
 import sys
@@ -283,16 +284,17 @@ class ListCreateStudentWeightView(generics.ListCreateAPIView):
     serializer_class = StudentWeightSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    @validate_student_subject_data
+    @validate_student_weight_data
     def post(self, request, *args, **kwargs):
         students_data = request.data
         temp = []
         for student_data in students_data:
-            temp.append(
-                StudentWeightSerializer(StudentWeight.objects.create(
-                    user=Student.objects.get(id=student_data["user"]),
-                    response=Responses.objects.get(id=student_data["response"])
-                )).data)
+            for resp in student_data:
+                temp.append(
+                    StudentWeightSerializer(StudentWeight.objects.create(
+                        user=Student.objects.get(id=resp["user"]),
+                        response=Responses.objects.get(id=resp["response"])
+                    )).data)
         # a_tag = StudentWeight.objects.create(
         #     user=request.data["user"],
         #     subject=request.data["subject"],
@@ -316,8 +318,8 @@ class StudentWeightDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            a_student_subject = self.queryset.get(pk=kwargs["pk"])
-            return Response(StudentWeightSerializer(a_student_subject).data)
+            a_student_weight = self.queryset.get(pk=kwargs["pk"])
+            return Response(StudentWeightSerializer(a_student_weight).data)
         except StudentWeight.DoesNotExist:
             return Response(
                 data={
@@ -326,13 +328,13 @@ class StudentWeightDetailView(generics.RetrieveUpdateDestroyAPIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-    @validate_student_subject_data
+    @validate_student_weight_data
     def put(self, request, *args, **kwargs):
         try:
             a_tag = self.queryset.get(pk=kwargs["pk"])
             serializer = StudentWeightSerializer()
-            updated_student_subject = serializer.update(a_tag, request.data)
-            return Response(StudentWeightSerializer(updated_student_subject).data)
+            updated_student_weight = serializer.update(a_tag, request.data)
+            return Response(StudentWeightSerializer(updated_student_weight).data)
         except StudentWeight.DoesNotExist:
             return Response(
                 data={
@@ -343,8 +345,8 @@ class StudentWeightDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def delete(self, request, *args, **kwargs):
         try:
-            a_student_subject = self.queryset.get(pk=kwargs["pk"])
-            a_student_subject.delete()
+            a_student_weight = self.queryset.get(pk=kwargs["pk"])
+            a_student_weight.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except StudentWeight.DoesNotExist:
             return Response(

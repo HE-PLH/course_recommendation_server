@@ -13,9 +13,17 @@ from .decorators import validate_student_data, validate_subject_data, validate_s
 
 # Create your views here.
 import sys
+
+
+
 sys.path.append("..")
 
 from chatbot.models import Responses
+from chatbot.models import Weight, Tags
+from chatbot.serializers import WeightSerializer
+from courses.models import Course
+from courses.serializers import CourseSerializer
+from chatbot.serializers import TagsSerializer
 
 class ListCreateCheckPinView(generics.ListCreateAPIView):
     """
@@ -307,6 +315,120 @@ class ListCreateStudentWeightView(generics.ListCreateAPIView):
         )
 
 class StudentWeightDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    GET Chats/:id/
+    PUT Chats/:id/
+    DELETE Chats/:id/
+    """
+    queryset = StudentWeight.objects.all()
+    serializer_class = StudentWeightSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            a_student_weight = self.queryset.get(pk=kwargs["pk"])
+            return Response(StudentWeightSerializer(a_student_weight).data)
+        except StudentWeight.DoesNotExist:
+            return Response(
+                data={
+                    "message": "StudentWeight with id: {} does not exist".format(kwargs["pk"])
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @validate_student_weight_data
+    def put(self, request, *args, **kwargs):
+        try:
+            a_tag = self.queryset.get(pk=kwargs["pk"])
+            serializer = StudentWeightSerializer()
+            updated_student_weight = serializer.update(a_tag, request.data)
+            return Response(StudentWeightSerializer(updated_student_weight).data)
+        except StudentWeight.DoesNotExist:
+            return Response(
+                data={
+                    "message": "StudentWeight with id: {} does not exist".format(kwargs["pk"])
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            a_student_weight = self.queryset.get(pk=kwargs["pk"])
+            a_student_weight.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except StudentWeight.DoesNotExist:
+            return Response(
+                data={
+                    "message": "StudentWeight with id: {} does not exist".format(kwargs["pk"])
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+       
+        
+class ListCreateNextTagView(generics.ListCreateAPIView):
+    """
+    GET Chats/
+    POST Chats/
+    """
+    queryset = StudentWeight.objects.all()
+    serializer_class = StudentWeightSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @validate_student_weight_data
+    def post(self, request, *args, **kwargs):
+        students_data = request.data
+        temp = []
+        # for student_data in students_data:
+        #     for resp in student_data:
+        #         temp.append(
+        #             StudentWeightSerializer(StudentWeight.objects.create(
+        #                 user=Student.objects.get(id=resp["user"]),
+        #                 response=Responses.objects.get(id=resp["response"])
+        #             )).data)
+
+        for student_data in students_data:
+            for resp in student_data:
+                user = Student.objects.get(id=resp["user"]),
+                response = Responses.objects.get(id=resp["response"])
+                weights = Weight.objects.filter(response=response)
+                for weight in weights:
+                    weight_data = WeightSerializer(weight).data
+                    weight_course = weight_data["course"]
+                    weight_value = weight_data["value"]
+                    weight_response = weight_data["response"]
+                    print(weight_value)
+                    if int(weight_value)<0:
+                        tag_object = Tags.objects.get(id=weight_response)
+                        temp.append(TagsSerializer(tag_object).data)
+                        # course_object = Course.objects.get(id=weight_course)
+                        # course_data = CourseSerializer(course_object).data
+                        # print("course_data", course_data)
+                        # course_category = course_data["category"]
+                        #
+                        # all_category_courses = Course.objects.filter(category=course_category)
+                        # c = []
+                        # for course in all_category_courses:
+                        #     c.append(CourseSerializer(course).data)
+                        #     _weights = Weight.objects.filter(course=course)
+                        # print("courses in category", c)
+
+
+
+                # temp.append({
+                #     # "user": user,
+                #     # "response": response,
+                #     # "weight": Weight,
+                #     "courses": c,
+                # })
+
+
+        return Response(
+            data=temp,
+            status=status.HTTP_201_CREATED
+        )
+
+class NextTagDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     GET Chats/:id/
     PUT Chats/:id/

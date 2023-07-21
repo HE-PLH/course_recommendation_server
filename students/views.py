@@ -9,21 +9,20 @@ from rest_framework.views import status
 from .models import Student, Subject, StudentSubject, StudentWeight
 from .serializers import StudentSerializer, SubjectSerializer, StudentSubjectSerializer, StudentWeightSerializer
 from .decorators import validate_student_data, validate_subject_data, validate_student_subject_data, \
-    validate_student_weight_data
+    validate_student_weight_data, validate_student_weight_data
 
 # Create your views here.
 import sys
-
-
 
 sys.path.append("..")
 
 from chatbot.models import Responses
 from chatbot.models import Weight, Tags
-from chatbot.serializers import WeightSerializer
+from chatbot.serializers import WeightSerializer, ResponsesSerializer
 from courses.models import Course
 from courses.serializers import CourseSerializer
 from chatbot.serializers import TagsSerializer
+
 
 class ListCreateCheckPinView(generics.ListCreateAPIView):
     """
@@ -35,14 +34,13 @@ class ListCreateCheckPinView(generics.ListCreateAPIView):
     serializer_class = StudentSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-
     def post(self, request, *args, **kwargs):
         # tag_instance = Chats.objects.get()
         # a_pattern = ChatsSerializer.objects.create(
         #     name=request.data["name"]
         # )
         # Test the chatbot
-        res=Student.objects.filter(index=request.data["index"])
+        res = Student.objects.filter(index=request.data["index"])
         student = res.first()
 
         s = StudentSerializer(student)
@@ -50,6 +48,7 @@ class ListCreateCheckPinView(generics.ListCreateAPIView):
             data=s.data,
             status=status.HTTP_201_CREATED
         )
+
 
 class ListCreateStudentView(generics.ListCreateAPIView):
     """
@@ -76,6 +75,7 @@ class ListCreateStudentView(generics.ListCreateAPIView):
             data=StudentSerializer(a_tag).data,
             status=status.HTTP_201_CREATED
         )
+
 
 class StudentDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -126,6 +126,8 @@ class StudentDetailView(generics.RetrieveUpdateDestroyAPIView):
                 },
                 status=status.HTTP_404_NOT_FOUND
             )
+
+
 class ListCreateSubjectView(generics.ListCreateAPIView):
     """
     GET Chats/
@@ -151,6 +153,7 @@ class ListCreateSubjectView(generics.ListCreateAPIView):
             data=SubjectSerializer(a_tag).data,
             status=status.HTTP_201_CREATED
         )
+
 
 class SubjectDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -201,7 +204,8 @@ class SubjectDetailView(generics.RetrieveUpdateDestroyAPIView):
                 },
                 status=status.HTTP_404_NOT_FOUND
             )
-            
+
+
 class ListCreateStudentSubjectView(generics.ListCreateAPIView):
     """
     GET Chats/
@@ -232,6 +236,7 @@ class ListCreateStudentSubjectView(generics.ListCreateAPIView):
             data=temp,
             status=status.HTTP_201_CREATED
         )
+
 
 class StudentSubjectDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -283,6 +288,7 @@ class StudentSubjectDetailView(generics.RetrieveUpdateDestroyAPIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+
 class ListCreateStudentWeightView(generics.ListCreateAPIView):
     """
     GET Chats/
@@ -313,6 +319,7 @@ class ListCreateStudentWeightView(generics.ListCreateAPIView):
             data=temp,
             status=status.HTTP_201_CREATED
         )
+
 
 class StudentWeightDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -363,9 +370,8 @@ class StudentWeightDetailView(generics.RetrieveUpdateDestroyAPIView):
                 },
                 status=status.HTTP_404_NOT_FOUND
             )
-        
-       
-        
+
+
 class ListCreateNextTagView(generics.ListCreateAPIView):
     """
     GET Chats/
@@ -397,10 +403,24 @@ class ListCreateNextTagView(generics.ListCreateAPIView):
                     weight_course = weight_data["course"]
                     weight_value = weight_data["value"]
                     weight_response = weight_data["response"]
-                    print(weight_value)
-                    if int(weight_value)<0:
-                        tag_object = Tags.objects.get(id=weight_response)
-                        temp.append(TagsSerializer(tag_object).data)
+                    the_course = Course.objects.get(id=weight_course)
+
+                    print(weight_course)
+                    if int(weight_value) < 0:
+                        course_data = CourseSerializer(the_course).data
+                        print("course_data", course_data)
+                        course_category = course_data["category"]
+                        all_category_courses = Course.objects.filter(category=course_category)
+                        c = []
+                        for course in all_category_courses:
+                            # c.append(CourseSerializer(course).data)
+                            _weights = Weight.objects.filter(course=course)
+                            for w in _weights:
+                                w_data = WeightSerializer(w).data
+                                c = w_data["course"]
+                        responses_object = Responses.objects.get(id=weight_response)
+                        print(responses_object)
+                        temp.append(TagsSerializer(ResponsesSerializer(responses_object).data['tag']).data)
                         # course_object = Course.objects.get(id=weight_course)
                         # course_data = CourseSerializer(course_object).data
                         # print("course_data", course_data)
@@ -413,8 +433,6 @@ class ListCreateNextTagView(generics.ListCreateAPIView):
                         #     _weights = Weight.objects.filter(course=course)
                         # print("courses in category", c)
 
-
-
                 # temp.append({
                 #     # "user": user,
                 #     # "response": response,
@@ -422,11 +440,11 @@ class ListCreateNextTagView(generics.ListCreateAPIView):
                 #     "courses": c,
                 # })
 
-
         return Response(
             data=temp,
             status=status.HTTP_201_CREATED
         )
+
 
 class NextTagDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -477,3 +495,97 @@ class NextTagDetailView(generics.RetrieveUpdateDestroyAPIView):
                 },
                 status=status.HTTP_404_NOT_FOUND
             )
+        
+        
+        
+
+
+class ListCreateRecommendationView(generics.ListCreateAPIView):
+    """
+    GET Chats/
+    POST Chats/
+    """
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @validate_student_weight_data
+    def post(self, request, *args, **kwargs):
+        courses_data = request.data
+        temp = []
+        # for course_data in courses_data:
+        #     for resp in course_data:
+        #         temp.append(
+        #             CourseSerializer(Course.objects.create(
+        #                 user=course.objects.get(id=resp["user"]),
+        #                 response=Responses.objects.get(id=resp["response"])
+        #             )).data)
+
+        bad_Categories = []
+        wanted_Categories = []
+        for course_data in courses_data:
+            for resp in course_data:
+                response = Responses.objects.get(id=resp["response"])
+                weights = Weight.objects.filter(response=response)
+
+                for weight in weights:
+                    print(weight)
+                    weight_data = WeightSerializer(weight).data
+                    weight_course = weight_data["course"]
+                    weight_value = weight_data["value"]
+                    weight_response = weight_data["response"]
+                    the_course = Course.objects.get(id=weight_course)
+
+                    # print(weight_course)
+                    if int(weight_value) < 0:
+                        course_data = CourseSerializer(the_course).data
+                        # print("course_data", course_data)
+                        course_category = course_data["category"]
+                        bad_Categories.append(course_category)
+                        # all_category_courses = Course.objects.filter(category=course_category)
+                        # c = []
+                        # for course in all_category_courses:
+                        #     # c.append(courseSerializer(course).data)
+                        #     _weights = Weight.objects.filter(course=course)
+                        #     for w in _weights:
+                        #         w_data = WeightSerializer(w).data
+                        #         c = w_data["course"]
+                        # responses_object = Responses.objects.get(id=weight_response)
+                        # print(responses_object)
+                        # temp.append(TagsSerializer(ResponsesSerializer(responses_object).data['tag']).data)
+                        # course_object = course.objects.get(id=weight_course)
+                        # course_data = courseSerializer(course_object).data
+                        # print("course_data", course_data)
+                        # course_category = course_data["category"]
+                        #
+                        # all_category_courses = course.objects.filter(category=course_category)
+                        # c = []
+                        # for course in all_category_courses:
+                        #     c.append(courseSerializer(course).data)
+                        #     _weights = Weight.objects.filter(course=course)
+                        # print("courses in category", c)
+                    else:
+                        # print("onneeeeee")
+                        course_data = CourseSerializer(the_course).data
+                        # print("course_data", course_data)
+                        course_category = course_data["category"]
+
+                        all_category_courses = Course.objects.filter(category=course_category)
+                        c = []
+                        for course in all_category_courses:
+                            c.append(CourseSerializer(course).data)
+
+                        wanted_Categories.append(c)
+
+                # temp.append({
+                #     # "user": user,
+                #     # "response": response,
+                #     # "weight": Weight,
+                #     "courses": c,
+                # })
+
+        return Response(
+            data=wanted_Categories,
+            status=status.HTTP_201_CREATED
+        )
+

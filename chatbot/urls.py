@@ -12,6 +12,7 @@ urlpatterns = [
     path('responses/', ListCreateResponsesView.as_view(), name="responses-list-create"),
     path('weights/', ListCreateWeightView.as_view(), name="weights-list-create"),
 
+
     path('get-training-data/', ListCreateTrainingDataView.as_view(), name="get-training-data"),
 
     path('chats/<int:pk>/', ChatsDetailView.as_view(), name="Chats-detail"),

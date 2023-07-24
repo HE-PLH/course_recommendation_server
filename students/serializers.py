@@ -1,9 +1,13 @@
 from django.forms import model_to_dict
 from rest_framework import serializers
 
-from .models import Student, Subject, StudentSubject, StudentWeight
+from .models import Student, Subject, StudentSubject, StudentWeight, SubjectWeight
 
 
+import sys
+sys.path.append("..")
+
+from chatbot.serializers import ResponsesSerializer
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
@@ -65,4 +69,19 @@ class SubjectSerializer(serializers.ModelSerializer):
         return instance
 
 
+
+class SubjectWeightSerializer(serializers.ModelSerializer):
+    # response = serializers.ReadOnlyField()
+
+    class Meta:
+        model = SubjectWeight
+        response = ResponsesSerializer()
+        subject = SubjectSerializer()
+        fields = ["id", "value", "subject", "response"]
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get("name", instance.name)
+        instance.tag = validated_data.get("response", instance.response)
+        instance.save()
+        return instance
 

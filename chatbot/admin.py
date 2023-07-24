@@ -8,3 +8,4 @@ admin.site.register(Patterns)
 admin.site.register(Responses)
 
 admin.site.register(Weight)
+

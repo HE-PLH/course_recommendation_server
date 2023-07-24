@@ -46,7 +46,20 @@ class StudentWeight(models.Model):
     def __str__(self):
         return "{} - {}".format(self.user, self.response)
 
+class SubjectWeight(models.Model):
+    # Tag
+    value = models.FloatField(max_length=255)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+    response = models.ForeignKey(Responses, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return "{} . {} . {}".format(self.subject, self.value, self.response)
+
+    def response_name(self):
+        return self.response.name
+
+    def response_id(self):
+        return self.response.id
 
 
 

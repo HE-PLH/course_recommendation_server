@@ -9,6 +9,7 @@ sys.path.append("..")
 from courses.serializers import CourseSerializer
 
 
+
 class ChatsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chats
@@ -167,4 +168,6 @@ class WeightSerializer(serializers.ModelSerializer):
         instance.tag = validated_data.get("response", instance.response)
         instance.save()
         return instance
+
+
 

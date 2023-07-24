@@ -6,8 +6,9 @@ from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import status
 
-from .models import Student, Subject, StudentSubject, StudentWeight
-from .serializers import StudentSerializer, SubjectSerializer, StudentSubjectSerializer, StudentWeightSerializer
+from .models import Student, Subject, StudentSubject, StudentWeight, SubjectWeight
+from .serializers import StudentSerializer, SubjectSerializer, StudentSubjectSerializer, StudentWeightSerializer, \
+    SubjectWeightSerializer
 from .decorators import validate_student_data, validate_subject_data, validate_student_subject_data, \
     validate_student_weight_data, validate_student_weight_data
 
@@ -22,6 +23,87 @@ from chatbot.serializers import WeightSerializer, ResponsesSerializer
 from courses.models import Course
 from courses.serializers import CourseSerializer
 from chatbot.serializers import TagsSerializer
+
+
+
+
+
+class ListCreateSubjectWeightView(generics.ListCreateAPIView):
+    """
+    GET Chats/
+    POST Chats/
+    """
+
+    queryset = SubjectWeight.objects.all()
+    serializer_class = SubjectWeightSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @validate_student_weight_data
+    def post(self, request, *args, **kwargs):
+        course_instance = Course.objects.get(id=request.data["course"])
+        response_instance = Responses.objects.get(id=request.data["response"])
+        a_SubjectWeight = SubjectWeight.objects.create(
+            name=request.data["value"],
+            course=course_instance,
+            response=response_instance
+        )
+        return Response(
+            data=SubjectWeightSerializer(a_SubjectWeight).data,
+            status=status.HTTP_201_CREATED
+        )
+
+
+class SubjectWeightDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    GET Chats/:id/
+    PUT Chats/:id/
+    DELETE Chats/:id/
+    """
+    queryset = SubjectWeight.objects.all()
+    serializer_class = SubjectWeightSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            a_SubjectWeight = self.queryset.get(pk=kwargs["pk"])
+            return Response(SubjectWeightSerializer(a_SubjectWeight).data)
+        except Tags.DoesNotExist:
+            return Response(
+                data={
+                    "message": "SubjectWeight with id: {} does not exist".format(kwargs["pk"])
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @validate_student_weight_data
+    def put(self, request, *args, **kwargs):
+        try:
+            a_SubjectWeight = self.queryset.get(pk=kwargs["pk"])
+            serializer = TagsSerializer()
+            updated_SubjectWeight = serializer.update(a_SubjectWeight, request.data)
+            return Response(SubjectWeightSerializer(updated_SubjectWeight).data)
+        except SubjectWeight.DoesNotExist:
+            return Response(
+                data={
+                    "message": "SubjectWeight with id: {} does not exist".format(kwargs["pk"])
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            a_SubjectWeight = self.queryset.get(pk=kwargs["pk"])
+            a_SubjectWeight.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except SubjectWeight.DoesNotExist:
+            return Response(
+                data={
+                    "message": "SubjectWeight with id: {} does not exist".format(kwargs["pk"])
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
 
 
 class ListCreateCheckPinView(generics.ListCreateAPIView):

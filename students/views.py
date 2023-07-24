@@ -585,7 +585,7 @@ class ListCreateRecommendationView(generics.ListCreateAPIView):
                 # })
 
         return Response(
-            data=wanted_Categories,
+            data={"wantedCourses":wanted_Categories, "unwantedCategories": bad_Categories},
             status=status.HTTP_201_CREATED
         )
 

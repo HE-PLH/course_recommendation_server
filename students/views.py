@@ -123,6 +123,7 @@ class ListCreateCheckPinView(generics.ListCreateAPIView):
         # )
         # Test the chatbot
         res = Student.objects.filter(index=request.data["index"])
+        print(res, request.data["index"])
         student = res.first()
 
         s = StudentSerializer(student)
@@ -653,9 +654,15 @@ class ListCreateRecommendationView(generics.ListCreateAPIView):
                         course_category = course_data["category"]
 
                         all_category_courses = Course.objects.filter(category=course_category)
+                        
                         c = []
                         for course in all_category_courses:
-                            c.append(CourseSerializer(course).data)
+                            tmp = {
+                                "weight": [WeightSerializer(i).data for i in
+                                           Weight.objects.filter(response=response, course=course)],
+                                "course": CourseSerializer(course).data
+                            }
+                            c.append(tmp)
 
                         wanted_Categories.append(c)
 

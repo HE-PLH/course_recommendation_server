@@ -307,6 +307,7 @@ class TrainingDataDetailView(generics.RetrieveUpdateDestroyAPIView):
                             tag.patterns_set.all()]
                 responses = [{'name': response.name, 'id': response.id} for response in
                              tag.responses_set.all()]
+
                 serialized_tags.append({
                     'tags': {"name": tag.name, "id": tag.id},
                     'patterns': patterns,

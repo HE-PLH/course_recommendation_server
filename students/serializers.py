@@ -75,13 +75,11 @@ class SubjectWeightSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SubjectWeight
-        response = ResponsesSerializer()
         subject = SubjectSerializer()
-        fields = ["id", "value", "subject", "response"]
+        fields = ["id", "value", "subject", "courses"]
 
     def update(self, instance, validated_data):
         instance.name = validated_data.get("name", instance.name)
-        instance.tag = validated_data.get("response", instance.response)
         instance.save()
         return instance
 

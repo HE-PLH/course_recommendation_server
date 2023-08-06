@@ -16,7 +16,9 @@ import sys
 sys.path.append("..")
 
 from courses.models import Course
+from students.models import Student
 from courses.serializers import CourseSerializer
+from students.serializers import StudentSerializer
 
 
 class ListCreateAskView(generics.ListCreateAPIView):
@@ -139,6 +141,71 @@ class ListCreateTrainingDataView(generics.ListCreateAPIView):
             data="success",
             status=status.HTTP_201_CREATED
         )
+
+class ListCreateTrainingDataView1(generics.ListCreateAPIView):
+    """
+    GET Td/
+    POST Td/
+    """
+    def get_queryset(self):
+        tags = Tags.objects.prefetch_related(
+            Prefetch('patterns_set', queryset=Patterns.objects.annotate(
+                pattern_name=Subquery(Patterns.objects.filter(id=OuterRef('id')).values('name')))),
+            Prefetch('responses_set', queryset=Responses.objects.annotate(
+                response_name=Subquery(Responses.objects.filter(id=OuterRef('id')).values('name')))),
+        )
+
+        serialized_tags = []
+
+        for tag in tags:
+            patterns = [{'name': pattern.name, 'id': pattern.id} for pattern in
+                        tag.patterns_set.all()]
+            responses = [{'name': response.name, 'id': response.id} for response in
+                         tag.responses_set.all()]
+            serialized_tags.append({
+                'tags': {"name": tag.name, "id": tag.id},
+                'patterns': patterns,
+                'responses': responses,
+            })
+
+        for i in serialized_tags:
+            print(i)
+
+        return serialized_tags
+
+    serializer_class = TrainingDataSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+
+    def post(self, request, *args, **kwargs):
+        user = request.data['user']
+        tags = Tags.objects.prefetch_related(
+            Prefetch('patterns_set', queryset=Patterns.objects.annotate(
+                pattern_name=Subquery(Patterns.objects.filter(id=OuterRef('id')).values('name')))),
+            Prefetch('responses_set', queryset=Responses.objects.annotate(
+                response_name=Subquery(Responses.objects.filter(id=OuterRef('id')).values('name')))),
+        )
+
+        serialized_tags = []
+
+        for tag in tags:
+            patterns = [{'name': pattern.name, 'id': pattern.id} for pattern in
+                        tag.patterns_set.all()]
+            responses = [{'name': response.name, 'id': response.id} for response in
+                         tag.responses_set.all()]
+            serialized_tags.append({
+                'tags': {"name": tag.name, "id": tag.id},
+                'patterns': patterns,
+                'responses': responses,
+            })
+
+        print(tags)
+        permission_classes = (permissions.IsAuthenticated,)
+        return Response(TrainingDataSerializer(serialized_tags[0]).data)
+        # return Response(
+        #     data="success",
+        #     status=status.HTTP_201_CREATED
+        # )
 
 class ListCreateTagsView(generics.ListCreateAPIView):
     """
@@ -300,7 +367,9 @@ class TrainingDataDetailView(generics.RetrieveUpdateDestroyAPIView):
             )
 
 
+
             serialized_tags = []
+
 
             for tag in tags:
                 patterns = [{'name': pattern.name, 'id': pattern.id} for pattern in

@@ -159,6 +159,49 @@ class ListCreateStudentView(generics.ListCreateAPIView):
             status=status.HTTP_201_CREATED
         )
 
+class ListCreateStudentLoginView(generics.ListCreateAPIView):
+    """
+    GET Chats/
+    POST Chats/
+    """
+    queryset = Student.objects.all()
+    serializer_class = StudentSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @validate_student_data
+    def post(self, request, *args, **kwargs):
+        _pass = request.data["password"]
+        mail = request.data["email"]
+        try:
+            a_student = Student.objects.filter(email=mail)
+
+            # print(a_student.filter(lambda a:a.password==_pass))
+            auth = False
+            single_student = {}
+
+            for i in a_student:
+                # print(StudentSerializer(i).data)
+                if StudentSerializer(i).data["password"] == _pass:
+                    auth=True
+                    single_student=StudentSerializer(i).data
+            if auth:
+                return Response(
+                    data=single_student,
+                    status=status.HTTP_200_OK
+                )
+            else:
+                return Response(
+                    data={},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
+        except Student.DoesNotExist:
+            return Response(
+                data={},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
 
 class StudentDetailView(generics.RetrieveUpdateDestroyAPIView):
     """

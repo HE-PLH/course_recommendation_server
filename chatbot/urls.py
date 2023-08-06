@@ -1,7 +1,8 @@
 from django.urls import path
 from .views import ListCreateChatsView, ChatsDetailView, TagsDetailView, ListCreateTagsView, ListCreatePatternsView, \
     PatternsDetailView, ResponsesDetailView, ListCreateResponsesView, ListCreateTrainingDataView, \
-    TrainingDataDetailView, ListCreateAskView, ListCreateWeightView, WeightDetailView, WeightReponseDetailView
+    TrainingDataDetailView, ListCreateAskView, ListCreateWeightView, WeightDetailView, WeightReponseDetailView, \
+    ListCreateTrainingDataView1
 
 urlpatterns = [
     path('ask/', ListCreateAskView.as_view(), name="Ask"),
@@ -15,6 +16,8 @@ urlpatterns = [
 
     path('get-training-data/', ListCreateTrainingDataView.as_view(), name="get-training-data"),
 
+    path('get-training-data-for-user/', ListCreateTrainingDataView1.as_view(), name="get-training-data1"),
+
     path('chats/<int:pk>/', ChatsDetailView.as_view(), name="Chats-detail"),
     path('tags/<int:pk>/', TagsDetailView.as_view(), name="Tags-detail"),
     path('patterns/<int:pk>/', PatternsDetailView.as_view(), name="Patterns-detail"),
@@ -23,5 +26,6 @@ urlpatterns = [
     path('weightsbyresponse/<int:pk>/', WeightReponseDetailView.as_view(), name="Responses-detail"),
 
 
-    path('get-training-data/<int:pk>/', TrainingDataDetailView.as_view(), name="Training-Data-detail")
+    path('get-training-data/<int:pk>/', TrainingDataDetailView.as_view(), name="Training-Data-detail"),
+
 ]

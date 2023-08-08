@@ -31,8 +31,7 @@ class Subject(models.Model):
 class StudentSubject(models.Model):
     # subject
     user = models.ForeignKey(Student, on_delete=models.CASCADE)
-
-    subject = models.CharField(max_length=255, null=False)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     grade = models.CharField(max_length=255, null=False)
 
 
@@ -48,12 +47,24 @@ class StudentWeight(models.Model):
         return "{} - {}".format(self.user, self.response)
 
 class SubjectWeight(models.Model):
-    # Tag
+    # s_weight
+    grade = models.CharField(max_length=255, null=False)
     value = models.FloatField(max_length=255)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
 
     def __str__(self):
-        return "{} . {} . {}".format(self.subject, self.grade, self.value)
+        return "{} . {} . {} . {}".format(self.subject, self.grade, self.value, self.course)
+
+
+
+class StudentResponses(models.Model):
+    # s_response
+    user = models.ForeignKey(Student, on_delete=models.CASCADE)
+    response = models.ForeignKey(Responses, on_delete=models.CASCADE)
+
+
+    def __str__(self):
+        return "{} . {}".format(self.response, self.user)
 
 

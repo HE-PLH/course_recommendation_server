@@ -17,10 +17,43 @@ sys.path.append("..")
 
 from courses.models import Course
 from students.models import Student
+from students.models import StudentSubject
+from students.models import SubjectWeight
 from courses.serializers import CourseSerializer
 from students.serializers import StudentSerializer
+from students.serializers import StudentSubjectSerializer
+from students.serializers import SubjectWeightSerializer
 
 
+
+def get_tags_by_category(course_category):
+    all_category_courses = Course.objects.filter(category=course_category)
+    cw = []
+    for course in all_category_courses:
+        # c.append(courseSerializer(course).data)
+        course_weights = Weight.objects.filter(course=course)
+        cw.extend(WeightSerializer(course_weights, many=True).data)
+
+
+    all_weight_responses = set([item.get('response') for item in cw if item.get('value')>10])
+
+    my_tags = [TagsSerializer(Tags.objects.get(id=Responses.objects.get(id=i).tag.id)).data for i in all_weight_responses]
+    return (my_tags)
+    # responses_object = Responses.objects.get(id=weight_response)
+    #
+    # print(responses_object)
+    # temp.append(TagsSerializer(ResponsesSerializer(responses_object).data['tag']).data)
+    # course_object = course.objects.get(id=weight_course)
+    # course_data = CourseSerializer(course_object).data
+    # print("course_data", course_data)
+    # course_category = course_data["category"]
+    #
+    # all_category_courses = course.objects.filter(category=course_category)
+    # c = []
+    # for course in all_category_courses:
+    #     c.append(courseSerializer(course).data)
+    #     _weights = Weight.objects.filter(course=course)
+    # print("courses in category", c)
 class ListCreateAskView(generics.ListCreateAPIView):
     """
         GET Chats/
@@ -179,6 +212,29 @@ class ListCreateTrainingDataView1(generics.ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         user = request.data['user']
+        student_subjects = StudentSubject.objects.filter(user=user)
+        student_subjects_data = StudentSubjectSerializer(student_subjects, many=True).data
+        # print(student_subjects)
+
+        subject_weights = SubjectWeight.objects.all()
+        subject_weights_data = SubjectWeightSerializer(subject_weights, many=True).data
+
+        # print(subject_weights_data)
+        my_student_subject_weights = []
+        for subject in student_subjects_data:
+            f = [item for item in subject_weights_data if item.get('subject') == subject.get('subject') and item.get('value')>10]
+            # f = subject_weights_data.filter(lambda x: x[subject]==subject[id])
+            my_student_subject_weights.extend(f)
+
+        # print(my_student_subject_weights)
+        preferred_courses = set([item.get('course') for item in my_student_subject_weights])
+        preferred_categories = set([Course.objects.get(id=item).category for item in preferred_courses])
+        print(preferred_categories)
+        my_tags = []
+        for cat in preferred_categories:
+            my_tags.extend(get_tags_by_category(cat))
+
+
         tags = Tags.objects.prefetch_related(
             Prefetch('patterns_set', queryset=Patterns.objects.annotate(
                 pattern_name=Subquery(Patterns.objects.filter(id=OuterRef('id')).values('name')))),
@@ -188,20 +244,24 @@ class ListCreateTrainingDataView1(generics.ListCreateAPIView):
 
         serialized_tags = []
 
-        for tag in tags:
-            patterns = [{'name': pattern.name, 'id': pattern.id} for pattern in
-                        tag.patterns_set.all()]
-            responses = [{'name': response.name, 'id': response.id} for response in
-                         tag.responses_set.all()]
-            serialized_tags.append({
-                'tags': {"name": tag.name, "id": tag.id},
-                'patterns': patterns,
-                'responses': responses,
-            })
 
-        print(tags)
+        for tag in tags:
+            # [print(x['id']) for x in my_tags]
+            _taglist = (list(filter(lambda x: x['id'] == tag.id, my_tags)))
+            if len(_taglist):
+                patterns = [{'name': pattern.name, 'id': pattern.id} for pattern in
+                            tag.patterns_set.all()]
+                responses = [{'name': response.name, 'id': response.id} for response in
+                             tag.responses_set.all()]
+                serialized_tags.append({
+                    'tags': {"name": tag.name, "id": tag.id},
+                    'patterns': patterns,
+                    'responses': responses,
+                })
+
+        # print(tags)
         permission_classes = (permissions.IsAuthenticated,)
-        return Response(TrainingDataSerializer(serialized_tags[0]).data)
+        return Response(TrainingDataSerializer(serialized_tags, many=True).data)
         # return Response(
         #     data="success",
         #     status=status.HTTP_201_CREATED

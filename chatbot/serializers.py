@@ -61,6 +61,7 @@ class ResponsesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Responses
+        tag = TagsSerializer()
         fields = ["id", "name", "tag"]
 
     def update(self, instance, validated_data):

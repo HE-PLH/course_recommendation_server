@@ -622,6 +622,7 @@ class NextTagDetailView(generics.RetrieveUpdateDestroyAPIView):
 def getRecommendation(courses_data):
     bad_Categories = []
     wanted_Categories = []
+    print(courses_data)
     for course_data in courses_data:
         for resp in course_data:
             response = Responses.objects.get(id=resp["response"])
@@ -706,6 +707,8 @@ class StudentRecommendationView(generics.RetrieveUpdateDestroyAPIView):
             rec = getRecommendation(_data)
             wanted_Categories = rec['wanted_Categories']
             unwantedCategories = rec['unwantedCategories']
+
+            print(rec)
 
             return Response(
                 data={"wantedCourses": wanted_Categories, "unwantedCategories": unwantedCategories},

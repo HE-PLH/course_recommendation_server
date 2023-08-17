@@ -35,8 +35,9 @@ def get_tags_by_category(course_category):
         cw.extend(WeightSerializer(course_weights, many=True).data)
 
 
-    all_weight_responses = set([item.get('response') for item in cw if item.get('value')>10])
-
+    print(cw)
+    all_weight_responses = set([item.get('response') for item in cw if item.get('value')>0])
+    print("weights", all_weight_responses)
     my_tags = [TagsSerializer(Tags.objects.get(id=Responses.objects.get(id=i).tag.id)).data for i in all_weight_responses]
     return (my_tags)
     # responses_object = Responses.objects.get(id=weight_response)

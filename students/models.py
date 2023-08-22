@@ -13,7 +13,7 @@ class Student(models.Model):
     firstname = models.CharField(max_length=255, null=False)
     middlename = models.CharField(max_length=255, null=False)
     password = models.CharField(max_length=255, null=False)
-    school = models.CharField(max_length=255, null=False)
+    school = models.CharField(max_length=255, null=True)
     email = models.CharField(max_length=255, null=False)
 
 

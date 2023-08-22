@@ -26,19 +26,36 @@ from students.serializers import SubjectWeightSerializer
 
 
 
-def get_tags_by_category(course_category):
+def _get_tags_by_category(course_category):
     all_category_courses = Course.objects.filter(category=course_category)
     cw = []
     for course in all_category_courses:
         # c.append(courseSerializer(course).data)
         course_weights = Weight.objects.filter(course=course)
+        # print('course_weights', course_weights)
         cw.extend(WeightSerializer(course_weights, many=True).data)
 
-
-    print(cw)
-    all_weight_responses = set([item.get('response') for item in cw if item.get('value')>0])
-    print("weights", all_weight_responses)
+    all_weight_responses = set([item.get('response') for item in cw if item.get('value')>7])
+    # print("all_weight_responses", all_weight_responses)
     my_tags = [TagsSerializer(Tags.objects.get(id=Responses.objects.get(id=i).tag.id)).data for i in all_weight_responses]
+    return (my_tags)
+
+def get_tags_by_category(course_category):
+    all_category_courses = Course.objects.filter(category=course_category)
+    # print("all_category_courses", all_category_courses)
+    cw = []
+    for course in all_category_courses:
+        # c.append(courseSerializer(course).data)
+        print("course", course)
+        course_weights = Weight.objects.filter(course=course)
+        print('course_weights', course_weights)
+        cw.extend(WeightSerializer(course_weights, many=True).data)
+
+    # print("weights belonging to this category", cw)
+    all_weight_responses = set([item.get('response') for item in cw if item.get('value') > 6])
+    # print("all_weight_responses", all_weight_responses)
+    my_tags = [TagsSerializer(Tags.objects.get(id=Responses.objects.get(id=i).tag.id)).data for i in all_weight_responses]
+    # print('my_tags', my_tags)
     return (my_tags)
     # responses_object = Responses.objects.get(id=weight_response)
     #
@@ -176,6 +193,9 @@ class ListCreateTrainingDataView(generics.ListCreateAPIView):
             status=status.HTTP_201_CREATED
         )
 
+
+
+
 class ListCreateTrainingDataView1(generics.ListCreateAPIView):
     """
     GET Td/
@@ -215,22 +235,26 @@ class ListCreateTrainingDataView1(generics.ListCreateAPIView):
         user = request.data['user']
         student_subjects = StudentSubject.objects.filter(user=user)
         student_subjects_data = StudentSubjectSerializer(student_subjects, many=True).data
-        # print(student_subjects)
+        # print("my_subjects", student_subjects)
 
         subject_weights = SubjectWeight.objects.all()
         subject_weights_data = SubjectWeightSerializer(subject_weights, many=True).data
 
-        # print(subject_weights_data)
+        # print("subject_weights_data", subject_weights_data)
         my_student_subject_weights = []
         for subject in student_subjects_data:
-            f = [item for item in subject_weights_data if item.get('subject') == subject.get('subject') and item.get('value')>10]
+            f = [item for item in subject_weights_data if item.get('subject') == subject.get('subject') and item.get('value')>7]
             # f = subject_weights_data.filter(lambda x: x[subject]==subject[id])
             my_student_subject_weights.extend(f)
 
-        # print(my_student_subject_weights)
+        # print("my_student_subject_weights", my_student_subject_weights)
+
         preferred_courses = set([item.get('course') for item in my_student_subject_weights])
+
+        # print("preferred_courses", preferred_courses)
         preferred_categories = set([Course.objects.get(id=item).category for item in preferred_courses])
-        print(preferred_categories)
+        # print("preferred_categories", preferred_categories)
+        print(get_tags_by_category("Medicine"))
         my_tags = []
         for cat in preferred_categories:
             my_tags.extend(get_tags_by_category(cat))

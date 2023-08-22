@@ -23,6 +23,7 @@ from chatbot.serializers import WeightSerializer, ResponsesSerializer, PatternsS
 from courses.models import Course
 from courses.serializers import CourseSerializer
 from chatbot.serializers import TagsSerializer
+from chatbot.views import _get_tags_by_category
 
 
 class ListCreateSubjectWeightView(generics.ListCreateAPIView):
@@ -145,7 +146,7 @@ class ListCreateStudentView(generics.ListCreateAPIView):
             firstname=request.data["firstname"],
             middlename=request.data["middlename"],
             password=request.data["password"],
-            school=request.data["school"],
+            # school=request.data["school"],
             email=request.data["email"],
         )
 
@@ -373,7 +374,9 @@ class StudentSubjectDetailView(generics.RetrieveUpdateDestroyAPIView):
         try:
             a_student_subject = self.queryset.filter(user=Student.objects.get(id=kwargs["pk"]))
 
-            return Response([{'id': item['id'], 'grade': item['grade'], 'subject': SubjectSerializer(Subject.objects.get(id=item['subject'])).data} for item in StudentSubjectSerializer(a_student_subject, many=True).data])
+            return Response([{'id': item['id'], 'grade': item['grade'],
+                              'subject': SubjectSerializer(Subject.objects.get(id=item['subject'])).data} for item in
+                             StudentSubjectSerializer(a_student_subject, many=True).data])
         except StudentSubject.DoesNotExist:
             return Response(
                 data={
@@ -506,65 +509,23 @@ class ListCreateNextTagView(generics.ListCreateAPIView):
     @validate_student_weight_data
     def post(self, request, *args, **kwargs):
         students_data = request.data
+        rec = getRecommendation(students_data)
+        wanted_Categories = rec['wanted_Categories']
+        unwantedCategories = rec['unwantedCategories']
+
         temp = []
-        # for student_data in students_data:
-        #     for resp in student_data:
-        #         temp.append(
-        #             StudentWeightSerializer(StudentWeight.objects.create(
-        #                 user=Student.objects.get(id=resp["user"]),
-        #                 response=Responses.objects.get(id=resp["response"])
-        #             )).data)
+        for i in wanted_Categories:
+            cat = i[0]["course"]["category"]
+            print("cat", cat)
+            # if cat not in unwantedCategories:
+            temp.extend(_get_tags_by_category(cat))
+            #     temp.append(_get_tags_by_category(cat))
 
-        for student_data in students_data:
-            for resp in student_data:
-                user = Student.objects.get(id=resp["user"]),
-                response = Responses.objects.get(id=resp["response"])
-                weights = Weight.objects.filter(response=response)
-                for weight in weights:
-                    weight_data = WeightSerializer(weight).data
-                    weight_course = weight_data["course"]
-                    weight_value = weight_data["value"]
-                    weight_response = weight_data["response"]
-                    the_course = Course.objects.get(id=weight_course)
-
-                    print(weight_course)
-                    if int(weight_value) < 0:
-                        course_data = CourseSerializer(the_course).data
-                        print("course_data", course_data)
-                        course_category = course_data["category"]
-                        all_category_courses = Course.objects.filter(category=course_category)
-                        c = []
-                        for course in all_category_courses:
-                            # c.append(CourseSerializer(course).data)
-                            _weights = Weight.objects.filter(course=course)
-                            for w in _weights:
-                                w_data = WeightSerializer(w).data
-                                c = w_data["course"]
-                        responses_object = Responses.objects.get(id=weight_response)
-                        print(responses_object)
-                        temp.append(TagsSerializer(ResponsesSerializer(responses_object).data['tag']).data)
-                        # course_object = Course.objects.get(id=weight_course)
-                        # course_data = CourseSerializer(course_object).data
-                        # print("course_data", course_data)
-                        # course_category = course_data["category"]
-                        #
-                        # all_category_courses = Course.objects.filter(category=course_category)
-                        # c = []
-                        # for course in all_category_courses:
-                        #     c.append(CourseSerializer(course).data)
-                        #     _weights = Weight.objects.filter(course=course)
-                        # print("courses in category", c)
-
-                # temp.append({
-                #     # "user": user,
-                #     # "response": response,
-                #     # "weight": Weight,
-                #     "courses": c,
-                # })
+        my_list = [item for item in temp if item["name"] not in unwantedCategories]
 
         return Response(
-            data=temp,
-            status=status.HTTP_201_CREATED
+            data=my_list,
+            status=status.HTTP_200_OK
         )
 
 
@@ -748,6 +709,7 @@ class StudentRecommendationView(generics.RetrieveUpdateDestroyAPIView):
                 },
                 status=status.HTTP_404_NOT_FOUND
             )
+
 
 class StudentResponsesView(generics.RetrieveUpdateDestroyAPIView):
     """
